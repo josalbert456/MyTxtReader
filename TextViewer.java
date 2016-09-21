@@ -73,7 +73,7 @@ public class TextViewer extends Activity implements View.OnTouchListener{
 
         }
         try{
-            txtBuffer = fileProcessor.readBackward(FileProcessor.MAX_READ_COUNTS, skipLength);
+            txtBuffer = fileProcessor.readForward(FileProcessor.MAX_READ_COUNTS, skipLength);
             textView.setText(txtBuffer);
         }catch (IOException ie){
             Toast.makeText(this, ie.getMessage(), Toast.LENGTH_SHORT).show();
@@ -102,7 +102,7 @@ public class TextViewer extends Activity implements View.OnTouchListener{
                 }else{
                     try{
 
-                        String text = fileProcessor.readForward();
+                        String text = fileProcessor.readBackward();
                         int end = txtBuffer.length() - text.length();
                         txtBuffer = text + txtBuffer.substring(0, end);
                         textView.setText(txtBuffer);

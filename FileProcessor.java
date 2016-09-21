@@ -40,7 +40,7 @@ public class FileProcessor {
 
         return  readBuffer;
     }
-    public String readBackward(int length, int skipLength)throws IOException{
+    public String readForward(int length, int skipLength)throws IOException{
         char[] buffer = new char[length];
         r.skip(skipLength);
         r.read(buffer);
@@ -53,7 +53,7 @@ public class FileProcessor {
         return  readBuffer;
     }
 
-    public String readForward()throws IOException{
+    public String readBackward()throws IOException{
         int skipLength = 0;
         for(int i=1; i<pageNo-1; i++){
             skipLength += prevReadLengths[i];
