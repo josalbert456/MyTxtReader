@@ -1,7 +1,7 @@
-package com.example.root.mytxtreader.reader_platform;
+package com.example.root.mytxtreaderone.platform;
 
 /**
- * Created by root on 16-9-21.
+ * Created by root on 16-9-22.
  */
 public class DisplayInfo {
     public static int BOTTOM_LINE_NUMBER = 0;
