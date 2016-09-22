@@ -40,6 +40,14 @@ public class FileProcessor {
         return  readBuffer;
     }
     public String readForward(int length, int skipLength)throws IOException{
+        /*char [] wholeFile = new char[(int)this.length];
+        r.read(wholeFile);
+        r.close();
+        r = new FileReader(file);
+        int l = wholeFile.length;
+        Logger.open();
+        Logger.info(String.valueOf(l));
+        Logger.close();*/
         char[] buffer = new char[length];
         r.skip(skipLength);
         r.read(buffer);

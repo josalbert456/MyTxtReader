@@ -3,16 +3,22 @@ package com.example.root.mytxtreaderone.gadgets;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupWindow;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.root.mytxtreaderone.R;
+
 
 public class PopupManager {
     private PopupWindow popupWindow;
     private View layout;
     public PopupManager(View layout, Context context){
         this.layout = layout;
-        popupWindow = new PopupWindow(layout, ViewGroup.LayoutParams.WRAP_CONTENT,
+        popupWindow = new PopupWindow(layout, ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT, true);
         popupWindow.setTouchable(true);
         popupWindow.setOutsideTouchable(true);
@@ -27,8 +33,7 @@ public class PopupManager {
     public View getView(int resId){
         return layout.findViewById(resId);
     }
-    public void setOnDismissListener(PopupWindow.OnDismissListener listener){
-        popupWindow.setOnDismissListener(listener);
+    public void dismiss(){
+        popupWindow.dismiss();
     }
-
 }

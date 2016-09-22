@@ -1,27 +1,21 @@
 package com.example.root.mytxtreaderone.platform;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.Point;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Environment;
-import android.text.Layout;
 import android.view.Display;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.root.mytxtreaderone.R;
+import com.example.root.mytxtreaderone.gadgets.BackgroundSetter;
 import com.example.root.mytxtreaderone.gadgets.PopupManager;
+import com.example.root.mytxtreaderone.gadgets.Timer;
 import com.example.root.mytxtreaderone.processors.FileProcessor;
 import com.example.root.mytxtreaderone.utils.Constants;
 
@@ -36,8 +30,7 @@ public class TextViewer extends Activity implements View.OnTouchListener{
     TextView textView;
     FileProcessor fileProcessor;
     Point size;
-    //PopupWindow layout_pop;
-    PopupManager popupManager;
+    PopupManager text_menu, background_popup, dict_popup;
     @Override
     public void onCreate(Bundle instance){
         super.onCreate(instance);
@@ -65,19 +58,16 @@ public class TextViewer extends Activity implements View.OnTouchListener{
                 byte[] buffer = new byte[(int)file.length()];
                 is.read(buffer);
                 String markData = new String(buffer);
+                skipLength = 0;
                 while(true){
-
                     int pos = markData.indexOf('\n');
                     if(pos==-1)break;
                     String record = markData.substring(0, pos);
                     fileProcessor.prevReadLengths[fileProcessor.pageNo] = Integer.valueOf(record);
-
                     markData = markData.substring(pos + 1);
                     fileProcessor.pageNo++;
-
+                    skipLength += Integer.valueOf(record);
                 }
-                skipLength = Integer.valueOf(markData);
-
                 file.delete();
             }
         }catch (IOException ie){
@@ -89,37 +79,53 @@ public class TextViewer extends Activity implements View.OnTouchListener{
         }catch (IOException ie){
             Toast.makeText(this, ie.getMessage(), Toast.LENGTH_SHORT).show();
         }
-        popupManager = new PopupManager(getLayoutInflater().inflate(R.layout.background, null), this);
-        popupManager.setOnDismissListener(new PopupWindow.OnDismissListener() {
-            @Override
-            public void onDismiss() {
-                TextView tv = (TextView)popupManager.getView(R.id.background);
-                Toast.makeText(getBaseContext(), tv.getText(), Toast.LENGTH_SHORT).show();
-            }
-        });
-        popupManager.setAnimation(R.style.mypopwindow_anim_style);
-        /*popupView = getLayoutInflater().inflate(R.layout.background, null);
+        text_menu = new PopupManager(getLayoutInflater().inflate(R.layout.text_menu, null), this);
+        text_menu.setAnimation(R.style.mypopwindow_anim_style);
 
-        layout_pop = new PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT, true);
-        layout_pop.setTouchable(true);
-        layout_pop.setOutsideTouchable(true);
-        layout_pop.setBackgroundDrawable(new BitmapDrawable(getResources(), (Bitmap) null));*/
+        background_popup = new PopupManager(getLayoutInflater().inflate(R.layout.background, null), this);
+        background_popup.setAnimation(R.style.mypopwindow_anim_style);
+
+        dict_popup = new PopupManager(getLayoutInflater().inflate(R.layout.dict_layout, null), this);
+        background_popup.setAnimation(R.style.mypopwindow_anim_style);
+
     }
-    //View popupView;
+
+    public void setBackground(View view){
+        BackgroundSetter.Set(textView, background_popup);
+    }
+    public void confirm(View view){
+        final RelativeLayout layout = (RelativeLayout)findViewById(R.id.text_viewer_layout);
+        switch (view.getId()){
+            case R.id.background_confirmer:
+                background_popup.dismiss();
+                break;
+            case R.id.menu_background:
+
+                background_popup.showPopup(layout.findViewById(R.id.placeHolder),
+                        view.getWidth() + view.getPaddingLeft(),
+                        view.getHeight() + view.getPaddingTop());
+                text_menu.dismiss();
+                break;
+            case R.id.menu_dict:
+                dict_popup.showPopup(layout.findViewById(R.id.placeHolder),
+                        size.x/24, size.y/4);
+                text_menu.dismiss();
+                break;
+        }
+    }
     boolean ifFirstRead = true;
     String txtBuffer = "";
     long time;
     public boolean onTouch(View view, MotionEvent motionEvent){
         switch (motionEvent.getAction()&MotionEvent.ACTION_MASK){
             case MotionEvent.ACTION_DOWN:
+                Timer.delay(100);
                 time = System.currentTimeMillis();
                 float pos = motionEvent.getX();
                 if(pos>size.x/2){
                     calcDisplayInfo();
                     try{
                         // guarantee that the txtBuffer always has 2048 chars
-
                         String text = fileProcessor.read(DisplayInfo.DISPLAY_TEXT_END);
                         txtBuffer = txtBuffer.substring(DisplayInfo.DISPLAY_TEXT_END);
                         txtBuffer += text;
@@ -142,11 +148,9 @@ public class TextViewer extends Activity implements View.OnTouchListener{
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
-                    if(System.currentTimeMillis()-time>300){
-                        /*layout_pop.showAsDropDown(findViewById(R.id.placeHolder), 10, 10);
-                        Toast.makeText(this, ((TextView)popupView.findViewById(R.id.background)).getText(),
-                                Toast.LENGTH_SHORT).show();*/
-                        popupManager.showPopup(findViewById(R.id.placeHolder), size.x/4, 10);
+                    if(System.currentTimeMillis()-time>1000){
+
+                        text_menu.showPopup(findViewById(R.id.placeHolder), size.x/24, size.x/24);
                        return true;
                     }
                 break;
