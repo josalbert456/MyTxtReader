@@ -59,7 +59,7 @@ public class FileProcessor {
 
         return  readBuffer;
     }
-
+    public boolean backFlag = false;
     public String readBackward()throws IOException{
         int skipLength = 0;
         for(int i=1; i<pageNo-1; i++){
@@ -78,7 +78,7 @@ public class FileProcessor {
         for(int i=0; i<buffer.length; i++){
             readBuffer += buffer[i];
         }
-
+        backFlag = true;
         return readBuffer;
 
     }

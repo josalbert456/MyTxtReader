@@ -119,17 +119,24 @@ public class TextViewer extends Activity implements View.OnTouchListener{
     public boolean onTouch(View view, MotionEvent motionEvent){
         switch (motionEvent.getAction()&MotionEvent.ACTION_MASK){
             case MotionEvent.ACTION_DOWN:
-                Timer.delay(100);
+                //Timer.delay(100);
                 time = System.currentTimeMillis();
                 float pos = motionEvent.getX();
                 if(pos>size.x/2){
                     calcDisplayInfo();
                     try{
                         // guarantee that the txtBuffer always has 2048 chars
-                        String text = fileProcessor.read(DisplayInfo.DISPLAY_TEXT_END);
-                        txtBuffer = txtBuffer.substring(DisplayInfo.DISPLAY_TEXT_END);
-                        txtBuffer += text;
-                        textView.setText(txtBuffer);
+                        if(fileProcessor.backFlag){
+                            txtBuffer = fileProcessor.read(2048);
+                            textView.setText(txtBuffer);
+                            fileProcessor.backFlag = false;
+                        }else{
+                            String text = fileProcessor.read(DisplayInfo.DISPLAY_TEXT_END);
+                            txtBuffer = txtBuffer.substring(DisplayInfo.DISPLAY_TEXT_END);
+                            txtBuffer += text;
+                            textView.setText(txtBuffer);
+                        }
+
                     }catch (IOException ie){
                         Toast.makeText(this, ie.getMessage(), Toast.LENGTH_SHORT).show();
                     }
