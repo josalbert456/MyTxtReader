@@ -2,7 +2,6 @@ package com.example.root.mytxtreaderone.processors;
 
 import android.content.Context;
 
-
 import com.example.root.mytxtreaderone.utils.Constants;
 
 import java.io.File;

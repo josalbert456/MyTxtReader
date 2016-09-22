@@ -1,17 +1,27 @@
 package com.example.root.mytxtreaderone.platform;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.Layout;
 import android.view.Display;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.root.mytxtreaderone.R;
+import com.example.root.mytxtreaderone.gadgets.PopupManager;
 import com.example.root.mytxtreaderone.processors.FileProcessor;
 import com.example.root.mytxtreaderone.utils.Constants;
 
@@ -26,6 +36,8 @@ public class TextViewer extends Activity implements View.OnTouchListener{
     TextView textView;
     FileProcessor fileProcessor;
     Point size;
+    //PopupWindow layout_pop;
+    PopupManager popupManager;
     @Override
     public void onCreate(Bundle instance){
         super.onCreate(instance);
@@ -33,7 +45,6 @@ public class TextViewer extends Activity implements View.OnTouchListener{
         if (Intent.ACTION_VIEW.equals(getIntent().getAction()))
         {
             Constants.file = new File(getIntent().getData().getPath());
-
         }
 
         Display display = getWindowManager().getDefaultDisplay();
@@ -78,13 +89,31 @@ public class TextViewer extends Activity implements View.OnTouchListener{
         }catch (IOException ie){
             Toast.makeText(this, ie.getMessage(), Toast.LENGTH_SHORT).show();
         }
+        popupManager = new PopupManager(getLayoutInflater().inflate(R.layout.background, null), this);
+        popupManager.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                TextView tv = (TextView)popupManager.getView(R.id.background);
+                Toast.makeText(getBaseContext(), tv.getText(), Toast.LENGTH_SHORT).show();
+            }
+        });
+        popupManager.setAnimation(R.style.mypopwindow_anim_style);
+        /*popupView = getLayoutInflater().inflate(R.layout.background, null);
+
+        layout_pop = new PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT, true);
+        layout_pop.setTouchable(true);
+        layout_pop.setOutsideTouchable(true);
+        layout_pop.setBackgroundDrawable(new BitmapDrawable(getResources(), (Bitmap) null));*/
     }
+    //View popupView;
     boolean ifFirstRead = true;
     String txtBuffer = "";
-
+    long time;
     public boolean onTouch(View view, MotionEvent motionEvent){
         switch (motionEvent.getAction()&MotionEvent.ACTION_MASK){
             case MotionEvent.ACTION_DOWN:
+                time = System.currentTimeMillis();
                 float pos = motionEvent.getX();
                 if(pos>size.x/2){
                     calcDisplayInfo();
@@ -106,12 +135,21 @@ public class TextViewer extends Activity implements View.OnTouchListener{
                         int end = txtBuffer.length() - text.length();
                         txtBuffer = text + txtBuffer.substring(0, end);
                         textView.setText(txtBuffer);
+                        return true;
                     }catch (IOException ie){
 
                     }
                 }
-
-
+                break;
+            case MotionEvent.ACTION_MOVE:
+                    if(System.currentTimeMillis()-time>300){
+                        /*layout_pop.showAsDropDown(findViewById(R.id.placeHolder), 10, 10);
+                        Toast.makeText(this, ((TextView)popupView.findViewById(R.id.background)).getText(),
+                                Toast.LENGTH_SHORT).show();*/
+                        popupManager.showPopup(findViewById(R.id.placeHolder), size.x/4, 10);
+                       return true;
+                    }
+                break;
         }
         return false;
     }
