@@ -33,6 +33,7 @@ public class TextViewer extends Activity implements View.OnTouchListener{
     TextView textView;
     FileProcessor fileProcessor;
     Point size;
+    String fileName;
     PopupManager text_menu, background_popup, dict_popup;
     @Override
     public void onCreate(Bundle instance){
@@ -43,6 +44,7 @@ public class TextViewer extends Activity implements View.OnTouchListener{
         if (Intent.ACTION_VIEW.equals(getIntent().getAction()))
         {
             Constants.file = new File(getIntent().getData().getPath());
+            fileName = Constants.file.getName();
         }
 
         Display display = getWindowManager().getDefaultDisplay();
