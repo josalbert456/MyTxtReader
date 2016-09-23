@@ -56,7 +56,9 @@ public class TextViewer extends Activity implements View.OnTouchListener{
 
         }
 
-        File file = new File(Environment.getExternalStorageDirectory() + "/file.txt");
+        File file = new File(Environment.getExternalStorageDirectory() + "/mytxt/" + fileName);
+        File dir = new File(Environment.getExternalStorageDirectory() + "/mytxt");
+        if(!dir.exists())dir.mkdir();
         try{
             if(!file.exists()){}else{
                 InputStream is = new FileInputStream(file);
@@ -200,7 +202,7 @@ public class TextViewer extends Activity implements View.OnTouchListener{
     }
     public void onPause(){
         super.onPause();
-        File file = new File(Environment.getExternalStorageDirectory() + "/file.txt");
+        File file = new File(Environment.getExternalStorageDirectory() + "/mytxt/" + fileName);
 
         try{
             if(!file.exists()){
