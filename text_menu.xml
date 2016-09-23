@@ -13,11 +13,15 @@
     android:layout_weight="1"
     android:text="AutoRead"
     android:layout_width="0dp"
+    android:onClick="confirm"
+    android:id="@+id/menu_auto_start"
     android:layout_height="wrap_content" />
 <Button
     android:layout_width="0dp"
     android:layout_weight="1"
     android:text="Config"
+    android:onClick="confirm"
+    android:id="@+id/menu_config"
     android:layout_height="wrap_content" />
 <Button
     android:layout_width="0dp"

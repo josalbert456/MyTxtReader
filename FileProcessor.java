@@ -1,9 +1,7 @@
 package com.example.root.mytxtreaderone.processors;
 
 import android.content.Context;
-
 import com.example.root.mytxtreaderone.utils.Constants;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -40,14 +38,6 @@ public class FileProcessor {
         return  readBuffer;
     }
     public String readForward(int length, int skipLength)throws IOException{
-        /*char [] wholeFile = new char[(int)this.length];
-        r.read(wholeFile);
-        r.close();
-        r = new FileReader(file);
-        int l = wholeFile.length;
-        Logger.open();
-        Logger.info(String.valueOf(l));
-        Logger.close();*/
         char[] buffer = new char[length];
         r.skip(skipLength);
         r.read(buffer);

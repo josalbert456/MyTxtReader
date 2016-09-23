@@ -3,15 +3,10 @@ package com.example.root.mytxtreaderone.dict;
 import android.content.Context;
 import android.content.res.AssetManager;
 
-import com.example.root.mytxtreaderone.gadgets.DictSearcher;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 
-/**
- * Created by root on 16-9-23.
- */
 public class Chinese implements Dictionary{
     public static HashMap<String, Integer> dict_map;
     static String dictionary_string;

@@ -1,6 +1,7 @@
 package com.example.root.mytxtreaderone.gadgets;
 
 import android.graphics.Color;
+import android.text.Html;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -27,33 +28,26 @@ public class DictSearcher {
                 break;
             case "en":
                 English english = (English)dicts;
-                search_result.setText(english.searchEntry(entry));
+                search_result.setText(Html.fromHtml(english.searchEntry(entry)));
                 break;
         }
 
     }
-    public static void toggleDicts(PopupManager dict_popup, Dictionary dictionary){
+    public static void toggleDicts(PopupManager dict_popup){
         Button bt;
         switch (DictSearcher.type){
             case "zh":
-
                 bt = (Button)(dict_popup.getView(R.id.ch_dict_toggler));
                 bt.setBackgroundColor(Color.rgb(200, 200, 30));
                 bt = (Button)(dict_popup.getView(R.id.en_dict_toggler));
                 bt.setBackgroundColor(Color.rgb(222, 222, 222));
                 break;
             case "en":
-
                 bt = (Button)(dict_popup.getView(R.id.en_dict_toggler));
                 bt.setBackgroundColor(Color.rgb(200, 200, 30));
                 bt = (Button)(dict_popup.getView(R.id.ch_dict_toggler));
                 bt.setBackgroundColor(Color.rgb(222, 222, 222));
                 break;
         }
-        /*dictionary = new Chinese();
-        bt = (Button)(dict_popup.getView(R.id.ch_dict_toggler));
-        bt.setBackgroundColor(Color.rgb(200, 200, 30));
-        bt = (Button)(dict_popup.getView(R.id.en_dict_toggler));
-        bt.setBackgroundColor(Color.rgb(222, 222, 222));*/
     }
 }

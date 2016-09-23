@@ -2,15 +2,14 @@ package com.example.root.mytxtreaderone.platform;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.Point;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.method.ScrollingMovementMethod;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,6 +18,7 @@ import com.example.root.mytxtreaderone.R;
 import com.example.root.mytxtreaderone.dict.Chinese;
 import com.example.root.mytxtreaderone.dict.Dictionary;
 import com.example.root.mytxtreaderone.dict.English;
+import com.example.root.mytxtreaderone.gadgets.AutoReadSetter;
 import com.example.root.mytxtreaderone.gadgets.BackgroundSetter;
 import com.example.root.mytxtreaderone.gadgets.ConfigureSetter;
 import com.example.root.mytxtreaderone.gadgets.DictSearcher;
@@ -39,7 +39,7 @@ public class TextViewer extends Activity implements View.OnTouchListener{
     Point size;
     String fileName;
     PopupManager text_menu, background_popup, dict_popup;
-    PopupManager config_popup;
+    PopupManager config_popup, auto_popup;
     Dictionary dictionary;
     @Override
     public void onCreate(Bundle instance){
@@ -47,6 +47,7 @@ public class TextViewer extends Activity implements View.OnTouchListener{
         setContentView(R.layout.text_view);
         switch (DictSearcher.type){
             case "zh":dictionary = new Chinese();break;
+            case "en": dictionary = new English(); break;
         }
         dictionary.openDict(this);
         if (Intent.ACTION_VIEW.equals(getIntent().getAction()))
@@ -109,6 +110,9 @@ public class TextViewer extends Activity implements View.OnTouchListener{
 
         config_popup = new PopupManager(getLayoutInflater().inflate(R.layout.configuration, null),this);
         config_popup.setAnimation(R.style.mypopwindow_anim_style);
+
+        auto_popup = new PopupManager(getLayoutInflater().inflate(R.layout.auto_read, null), this);
+        auto_popup.setAnimation(R.style.mypopwindow_anim_style);
     }
 
     public void setBackground(View view){
@@ -118,6 +122,11 @@ public class TextViewer extends Activity implements View.OnTouchListener{
         //Button bt;
         final RelativeLayout layout = (RelativeLayout)findViewById(R.id.text_viewer_layout);
         switch (view.getId()){
+            case R.id.menu_auto_start:
+                auto_popup.showPopup(layout.findViewById(R.id.placeHolder),
+                        size.x / 24, size.y / 6);
+                text_menu.dismiss();
+                break;
             case R.id.background_confirmer:
                 background_popup.dismiss();
                 break;
@@ -147,24 +156,94 @@ public class TextViewer extends Activity implements View.OnTouchListener{
             case R.id.en_dict_toggler:
                 DictSearcher.type = "en";
                 dictionary = new English();
-                DictSearcher.toggleDicts(dict_popup, dictionary);
+                dictionary.openDict(this);
+                DictSearcher.toggleDicts(dict_popup);
                 break;
             case R.id.ch_dict_toggler:
                 DictSearcher.type = "zh";
                 dictionary = new Chinese();
-                DictSearcher.toggleDicts(dict_popup, dictionary);
-                /*dictionary = new Chinese();
-                bt = (Button)(dict_popup.getView(R.id.ch_dict_toggler));
-                bt.setBackgroundColor(Color.rgb(200, 200, 30));
-                bt = (Button)(dict_popup.getView(R.id.en_dict_toggler));
-                bt.setBackgroundColor(Color.rgb(222, 222, 222));*/
+                dictionary.openDict(this);
+                DictSearcher.toggleDicts(dict_popup);
+                break;
+            case R.id.dict_exit:
+                dict_popup.dismiss();
+                break;
+            case R.id.autoread_confirm:
+                AutoReadSetter.setDelay(auto_popup);
+                AutoReadingTask art = new AutoReadingTask();
+                art.execute();
+                auto_popup.dismiss();
+                break;
+            case R.id.cancel_autoread:
+                AutoReadSetter.autoReadingFlag = false;
+                auto_popup.dismiss();
                 break;
         }
+    }
+
+    private class AutoReadingTask extends AsyncTask<String, Integer, String> {
+        @Override
+        protected void onPreExecute() {}
+        @Override
+        protected String doInBackground(String... params) {
+            while(AutoReadSetter.autoReadingFlag){
+                try{
+                    for(int i=0; i<AutoReadSetter.delayTime; i++){
+                        Thread.sleep(1000);
+                        if(!AutoReadSetter.autoReadingFlag)break;
+                    }
+                    publishProgress(0);
+                }catch (InterruptedException ie){}
+            }
+            return "";
+        }
+        @Override
+        protected void onProgressUpdate(Integer... progresses) {
+            readForward();
+        }
+        @Override
+        protected void onPostExecute(String result) {}
+        @Override
+        protected void onCancelled() {}
     }
     boolean ifFirstRead = true;
     String txtBuffer = "";
     long time;
 
+    private void readForward(){
+        calcDisplayInfo();
+        try{
+            // guarantee that the txtBuffer always has 2048 chars
+            // if we read back just now, we only need to read 2048 forward
+            if(fileProcessor.backFlag){
+                txtBuffer = fileProcessor.read(FileProcessor.MAX_READ_COUNTS);
+                textView.setText(txtBuffer);
+                fileProcessor.backFlag = false;
+            }else{
+                // if not, we read text and stuff the textbuffer
+                String text = fileProcessor.read(DisplayInfo.DISPLAY_TEXT_END);
+                txtBuffer = txtBuffer.substring(DisplayInfo.DISPLAY_TEXT_END);
+                txtBuffer += text;
+                textView.setText(txtBuffer);
+            }
+
+        }catch (IOException ie){
+            Toast.makeText(this, ie.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void readBackward(){
+        try{
+            if(fileProcessor.pageNo<=1){}else{
+                String text = fileProcessor.readBackward();
+                int end = txtBuffer.length() - text.length();
+                txtBuffer = text + txtBuffer.substring(0, end);
+                textView.setText(txtBuffer);
+            }
+
+        }catch (IOException ie){
+
+        }
+    }
     // Better action: move for page up/down, long click to show menu
     public boolean onTouch(View view, MotionEvent motionEvent){
         switch (motionEvent.getAction()&MotionEvent.ACTION_MASK){
@@ -172,7 +251,7 @@ public class TextViewer extends Activity implements View.OnTouchListener{
                 time = System.currentTimeMillis();
                 float pos = motionEvent.getX();
                 if(pos>size.x/2){
-                    calcDisplayInfo();
+                    /*calcDisplayInfo();
                     try{
                         // guarantee that the txtBuffer always has 2048 chars
                         // if we read back just now, we only need to read 2048 forward
@@ -190,10 +269,11 @@ public class TextViewer extends Activity implements View.OnTouchListener{
 
                     }catch (IOException ie){
                         Toast.makeText(this, ie.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
+                    }*/
+                    readForward();
                     return true;
                 }else{
-                    try{
+                    /*try{
                         if(fileProcessor.pageNo<=1){}else{
                             String text = fileProcessor.readBackward();
                             int end = txtBuffer.length() - text.length();
@@ -204,9 +284,11 @@ public class TextViewer extends Activity implements View.OnTouchListener{
                         return true;
                     }catch (IOException ie){
 
-                    }
+                    }*/
+                    readBackward();
+                    return true;
                 }
-                break;
+
             case MotionEvent.ACTION_MOVE:
                     if(System.currentTimeMillis()-time>1000){
 

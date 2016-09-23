@@ -53,11 +53,23 @@
             android:layout_weight="3"
             android:text="Exit"
             android:layout_width="0dp"
+            android:onClick="confirm"
+            android:id="@+id/dict_exit"
             android:layout_height="wrap_content" />
         <Button
+            android:layout_weight="1.5"
+            android:text="CH"
+            android:id="@+id/ch_dict_toggler"
             android:layout_width="0dp"
-            android:layout_weight="3"
-            android:visibility="invisible"
+            android:onClick="confirm"
             android:layout_height="wrap_content" />
+        <Button
+            android:layout_weight="1.5"
+            android:text="EN"
+            android:id="@+id/en_dict_toggler"
+            android:layout_width="0dp"
+            android:onClick="confirm"
+            android:layout_height="wrap_content" />
+
         </LinearLayout>
 </LinearLayout>
