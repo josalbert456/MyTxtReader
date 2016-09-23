@@ -2,6 +2,7 @@ package com.example.root.mytxtreaderone.platform;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Environment;
@@ -9,14 +10,17 @@ import android.text.method.ScrollingMovementMethod;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.EditText;
+import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.root.mytxtreaderone.R;
 import com.example.root.mytxtreaderone.dict.Chinese;
+import com.example.root.mytxtreaderone.dict.Dictionary;
+import com.example.root.mytxtreaderone.dict.English;
 import com.example.root.mytxtreaderone.gadgets.BackgroundSetter;
+import com.example.root.mytxtreaderone.gadgets.ConfigureSetter;
 import com.example.root.mytxtreaderone.gadgets.DictSearcher;
 import com.example.root.mytxtreaderone.gadgets.PopupManager;
 import com.example.root.mytxtreaderone.processors.FileProcessor;
@@ -35,12 +39,16 @@ public class TextViewer extends Activity implements View.OnTouchListener{
     Point size;
     String fileName;
     PopupManager text_menu, background_popup, dict_popup;
+    PopupManager config_popup;
+    Dictionary dictionary;
     @Override
     public void onCreate(Bundle instance){
         super.onCreate(instance);
         setContentView(R.layout.text_view);
-
-        Chinese.openDict(this);
+        switch (DictSearcher.type){
+            case "zh":dictionary = new Chinese();break;
+        }
+        dictionary.openDict(this);
         if (Intent.ACTION_VIEW.equals(getIntent().getAction()))
         {
             Constants.file = new File(getIntent().getData().getPath());
@@ -99,31 +107,57 @@ public class TextViewer extends Activity implements View.OnTouchListener{
         TextView search_result = (TextView)dict_popup.getView(R.id.search_result);
         search_result.setMovementMethod(new ScrollingMovementMethod());
 
+        config_popup = new PopupManager(getLayoutInflater().inflate(R.layout.configuration, null),this);
+        config_popup.setAnimation(R.style.mypopwindow_anim_style);
     }
 
     public void setBackground(View view){
         BackgroundSetter.Set(textView, background_popup);
     }
     public void confirm(View view){
+        //Button bt;
         final RelativeLayout layout = (RelativeLayout)findViewById(R.id.text_viewer_layout);
         switch (view.getId()){
             case R.id.background_confirmer:
                 background_popup.dismiss();
                 break;
             case R.id.menu_background:
-
                 background_popup.showPopup(layout.findViewById(R.id.placeHolder),
                         view.getWidth() + view.getPaddingLeft(),
                         view.getHeight() + view.getPaddingTop());
                 text_menu.dismiss();
                 break;
+
             case R.id.menu_dict:
                 dict_popup.showPopup(layout.findViewById(R.id.placeHolder),
                         size.x / 24, size.y / 6);
                 text_menu.dismiss();
                 break;
             case R.id.dict_search:
-                DictSearcher.search(dict_popup);
+                DictSearcher.search(dict_popup, dictionary);
+                break;
+            case R.id.menu_config:
+                config_popup.showPopup(layout.findViewById(R.id.placeHolder),
+                        size.x / 24, size.y / 6);
+                text_menu.dismiss();
+                break;
+            case R.id.config_confirm:
+                ConfigureSetter.confirmConfig(config_popup, fileName);
+                break;
+            case R.id.en_dict_toggler:
+                DictSearcher.type = "en";
+                dictionary = new English();
+                DictSearcher.toggleDicts(dict_popup, dictionary);
+                break;
+            case R.id.ch_dict_toggler:
+                DictSearcher.type = "zh";
+                dictionary = new Chinese();
+                DictSearcher.toggleDicts(dict_popup, dictionary);
+                /*dictionary = new Chinese();
+                bt = (Button)(dict_popup.getView(R.id.ch_dict_toggler));
+                bt.setBackgroundColor(Color.rgb(200, 200, 30));
+                bt = (Button)(dict_popup.getView(R.id.en_dict_toggler));
+                bt.setBackgroundColor(Color.rgb(222, 222, 222));*/
                 break;
         }
     }
@@ -143,7 +177,7 @@ public class TextViewer extends Activity implements View.OnTouchListener{
                         // guarantee that the txtBuffer always has 2048 chars
                         // if we read back just now, we only need to read 2048 forward
                         if(fileProcessor.backFlag){
-                            txtBuffer = fileProcessor.read(2048);
+                            txtBuffer = fileProcessor.read(FileProcessor.MAX_READ_COUNTS);
                             textView.setText(txtBuffer);
                             fileProcessor.backFlag = false;
                         }else{
@@ -160,11 +194,13 @@ public class TextViewer extends Activity implements View.OnTouchListener{
                     return true;
                 }else{
                     try{
+                        if(fileProcessor.pageNo<=1){}else{
+                            String text = fileProcessor.readBackward();
+                            int end = txtBuffer.length() - text.length();
+                            txtBuffer = text + txtBuffer.substring(0, end);
+                            textView.setText(txtBuffer);
+                        }
 
-                        String text = fileProcessor.readBackward();
-                        int end = txtBuffer.length() - text.length();
-                        txtBuffer = text + txtBuffer.substring(0, end);
-                        textView.setText(txtBuffer);
                         return true;
                     }catch (IOException ie){
 
@@ -204,23 +240,22 @@ public class TextViewer extends Activity implements View.OnTouchListener{
     }
     public void onPause(){
         super.onPause();
-        File file = new File(Environment.getExternalStorageDirectory() + "/mytxt/" + fileName);
+            File file = new File(Environment.getExternalStorageDirectory() + "/mytxt/" + fileName);
+            try{
+                if(!file.exists()){
+                    file.createNewFile();
+                }
 
-        try{
-            if(!file.exists()){
-                file.createNewFile();
+                OutputStream os = new FileOutputStream(file, true);
+                for(int i=1; i<fileProcessor.pageNo; i++){
+                    String pos = String.valueOf(fileProcessor.prevReadLengths[i]) + "\n";
+                    os.write(pos.getBytes());
+                }
+                String length = String.valueOf(fileProcessor.readLength);
+                os.write(length.getBytes());
+            }catch (IOException ie){
+
             }
-
-            OutputStream os = new FileOutputStream(file, true);
-            for(int i=1; i<fileProcessor.pageNo; i++){
-                String pos = String.valueOf(fileProcessor.prevReadLengths[i]) + "\n";
-                os.write(pos.getBytes());
-            }
-            String length = String.valueOf(fileProcessor.readLength);
-            os.write(length.getBytes());
-        }catch (IOException ie){
-
-        }
         System.exit(0);
     }
 }

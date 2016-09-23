@@ -3,6 +3,8 @@ package com.example.root.mytxtreaderone.dict;
 import android.content.Context;
 import android.content.res.AssetManager;
 
+import com.example.root.mytxtreaderone.gadgets.DictSearcher;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -10,19 +12,20 @@ import java.util.HashMap;
 /**
  * Created by root on 16-9-23.
  */
-public class Chinese {
+public class Chinese implements Dictionary{
     public static HashMap<String, Integer> dict_map;
     static String dictionary_string;
-
-    public static void openDict(final Context context){
+    @Override
+    public void openDict(final Context context){
         (new Thread(new Runnable() {
             @Override
             public void run() {
-                Chinese.loadDictMap(context);
+                loadDictMap(context);
             }
         })).start();
     }
-    private static void loadDictMap(Context context){
+    @Override
+    public void loadDictMap(Context context){
         AssetManager assets = context.getAssets();
         dict_map = new HashMap<>();
 
@@ -59,11 +62,13 @@ public class Chinese {
             int entry_line_int = Integer.valueOf(cur_entry_line);
             dict_map.put(cur_entry, entry_line_int);
             dict_map.put("你", 20540);
+            dict_map.put("饭", 20545);
         }catch (IOException ie){
 
         }
     }
-    public static String searchEntry(String entry){
+    @Override
+    public String searchEntry(String entry){
         if(!dict_map.containsKey(entry)){
             return "No Entry!";
         }
