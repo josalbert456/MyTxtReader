@@ -16,4 +16,5 @@ Maybe a better way to handle file content is to load all the content the first t
 Some little bugs are cleaned and the background images are from the internet and haven't been processed (gimp for linux and ps for Windows are great tools for this job), thus some of them are a little bigger
 
 Dictionary, the initial inspiration for the project
-Interface the dicts to modulize it
+
+Interface the dicts to modulize it (Chinese.java, Dictionary.java, English.java)
