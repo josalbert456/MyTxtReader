@@ -59,6 +59,7 @@ public class FileProcessor {
 
         return  readBuffer;
     }
+    // the backFlag is to mark we have read back once for next read forward
     public boolean backFlag = false;
     public String readBackward()throws IOException{
         int skipLength = 0;

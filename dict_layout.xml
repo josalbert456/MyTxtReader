@@ -1,12 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:padding="16dp"
+    android:orientation="vertical"
     android:layout_width="match_parent" android:layout_height="match_parent">
 <TextView
-    android:text="dictionary"
+    android:text="Chinese Dictionary"
     android:padding="10dp"
     android:background="#444"
     android:alpha="0.96"
     android:layout_width="match_parent"
     android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:background="#444"
+        android:padding="10dp"
+        android:layout_width="match_parent"
+        android:paddingBottom="2dp"
+        android:orientation="horizontal"
+        android:layout_height="wrap_content">
+        <TextView
+            android:layout_weight="2"
+            android:layout_width="0dp"
+            android:text="Entry: "
+            android:layout_height="wrap_content" />
+        <EditText
+            android:id="@+id/dict_entry"
+            android:layout_weight="6"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content" />
+        </LinearLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:id="@+id/search_result"
+        android:background="#333"
+        android:textColor="#fff"
+        android:maxLines="1000"
+        android:padding="16dp"
+        android:layout_height="160dp" />
+    <LinearLayout
+        android:background="#444"
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:layout_height="wrap_content">
+        <Button
+            android:layout_weight="3"
+            android:text="Search"
+            android:layout_width="0dp"
+            android:onClick="confirm"
+            android:id="@+id/dict_search"
+            android:layout_height="wrap_content" />
+        <Button
+            android:layout_weight="3"
+            android:text="Exit"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content" />
+        <Button
+            android:layout_width="0dp"
+            android:layout_weight="3"
+            android:visibility="invisible"
+            android:layout_height="wrap_content" />
+        </LinearLayout>
 </LinearLayout>

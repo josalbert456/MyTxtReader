@@ -5,17 +5,20 @@ import android.content.Intent;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.method.ScrollingMovementMethod;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.root.mytxtreaderone.R;
+import com.example.root.mytxtreaderone.dict.Chinese;
 import com.example.root.mytxtreaderone.gadgets.BackgroundSetter;
+import com.example.root.mytxtreaderone.gadgets.DictSearcher;
 import com.example.root.mytxtreaderone.gadgets.PopupManager;
-import com.example.root.mytxtreaderone.gadgets.Timer;
 import com.example.root.mytxtreaderone.processors.FileProcessor;
 import com.example.root.mytxtreaderone.utils.Constants;
 
@@ -35,6 +38,8 @@ public class TextViewer extends Activity implements View.OnTouchListener{
     public void onCreate(Bundle instance){
         super.onCreate(instance);
         setContentView(R.layout.text_view);
+
+        Chinese.openDict(this);
         if (Intent.ACTION_VIEW.equals(getIntent().getAction()))
         {
             Constants.file = new File(getIntent().getData().getPath());
@@ -86,7 +91,9 @@ public class TextViewer extends Activity implements View.OnTouchListener{
         background_popup.setAnimation(R.style.mypopwindow_anim_style);
 
         dict_popup = new PopupManager(getLayoutInflater().inflate(R.layout.dict_layout, null), this);
-        background_popup.setAnimation(R.style.mypopwindow_anim_style);
+        dict_popup.setAnimation(R.style.mypopwindow_anim_style);
+        TextView search_result = (TextView)dict_popup.getView(R.id.search_result);
+        search_result.setMovementMethod(new ScrollingMovementMethod());
 
     }
 
@@ -108,29 +115,35 @@ public class TextViewer extends Activity implements View.OnTouchListener{
                 break;
             case R.id.menu_dict:
                 dict_popup.showPopup(layout.findViewById(R.id.placeHolder),
-                        size.x/24, size.y/4);
+                        size.x / 24, size.y / 6);
                 text_menu.dismiss();
+                break;
+            case R.id.dict_search:
+                DictSearcher.search(dict_popup);
                 break;
         }
     }
     boolean ifFirstRead = true;
     String txtBuffer = "";
     long time;
+
+    // Better action: move for page up/down, long click to show menu
     public boolean onTouch(View view, MotionEvent motionEvent){
         switch (motionEvent.getAction()&MotionEvent.ACTION_MASK){
             case MotionEvent.ACTION_DOWN:
-                //Timer.delay(100);
                 time = System.currentTimeMillis();
                 float pos = motionEvent.getX();
                 if(pos>size.x/2){
                     calcDisplayInfo();
                     try{
                         // guarantee that the txtBuffer always has 2048 chars
+                        // if we read back just now, we only need to read 2048 forward
                         if(fileProcessor.backFlag){
                             txtBuffer = fileProcessor.read(2048);
                             textView.setText(txtBuffer);
                             fileProcessor.backFlag = false;
                         }else{
+                            // if not, we read text and stuff the textbuffer
                             String text = fileProcessor.read(DisplayInfo.DISPLAY_TEXT_END);
                             txtBuffer = txtBuffer.substring(DisplayInfo.DISPLAY_TEXT_END);
                             txtBuffer += text;
