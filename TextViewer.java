@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.graphics.Point;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.text.method.ScrollingMovementMethod;
 import android.view.Display;
 import android.view.MotionEvent;
@@ -20,6 +19,7 @@ import com.example.root.mytxtreaderone.dict.Dictionary;
 import com.example.root.mytxtreaderone.dict.English;
 import com.example.root.mytxtreaderone.gadgets.AutoReadSetter;
 import com.example.root.mytxtreaderone.gadgets.BackgroundSetter;
+import com.example.root.mytxtreaderone.gadgets.BookMarker;
 import com.example.root.mytxtreaderone.gadgets.ConfigureSetter;
 import com.example.root.mytxtreaderone.gadgets.DictSearcher;
 import com.example.root.mytxtreaderone.gadgets.PopupManager;
@@ -27,11 +27,7 @@ import com.example.root.mytxtreaderone.processors.FileProcessor;
 import com.example.root.mytxtreaderone.utils.Constants;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 public class TextViewer extends Activity implements View.OnTouchListener{
     TextView textView;
@@ -41,6 +37,7 @@ public class TextViewer extends Activity implements View.OnTouchListener{
     PopupManager text_menu, background_popup, dict_popup;
     PopupManager config_popup, auto_popup;
     Dictionary dictionary;
+    BookMarker bookMarker;
     @Override
     public void onCreate(Bundle instance){
         super.onCreate(instance);
@@ -67,30 +64,8 @@ public class TextViewer extends Activity implements View.OnTouchListener{
 
         }
 
-        File file = new File(Environment.getExternalStorageDirectory() + "/mytxt/" + fileName);
-        File dir = new File(Environment.getExternalStorageDirectory() + "/mytxt");
-        if(!dir.exists())dir.mkdir();
-        try{
-            if(!file.exists()){}else{
-                InputStream is = new FileInputStream(file);
-                byte[] buffer = new byte[(int)file.length()];
-                is.read(buffer);
-                String markData = new String(buffer);
-                skipLength = 0;
-                while(true){
-                    int pos = markData.indexOf('\n');
-                    if(pos==-1)break;
-                    String record = markData.substring(0, pos);
-                    fileProcessor.prevReadLengths[fileProcessor.pageNo] = Integer.valueOf(record);
-                    markData = markData.substring(pos + 1);
-                    fileProcessor.pageNo++;
-                    skipLength += Integer.valueOf(record);
-                }
-                file.delete();
-            }
-        }catch (IOException ie){
-
-        }
+        bookMarker = new BookMarker(fileName);
+        int skipLength = bookMarker.decord(fileProcessor);
         try{
             txtBuffer = fileProcessor.readForward(FileProcessor.MAX_READ_COUNTS, skipLength);
             textView.setText(txtBuffer);
@@ -265,6 +240,7 @@ public class TextViewer extends Activity implements View.OnTouchListener{
                         }
                     }
                 return true;
+
             case MotionEvent.ACTION_UP:
                 if(touchDownPos - touchUpPos > 50) readForward();
                 else if(touchDownPos - touchUpPos < -50) readBackward();
@@ -288,29 +264,14 @@ public class TextViewer extends Activity implements View.OnTouchListener{
         fileProcessor.prevReadLengths[fileProcessor.pageNo] = DisplayInfo.DISPLAY_TEXT_END;
         fileProcessor.pageNo++;
     }
-    int skipLength = 0;
+    //int skipLength = 0;
     public void onResume(){
         super.onResume();
 
     }
     public void onPause(){
         super.onPause();
-            File file = new File(Environment.getExternalStorageDirectory() + "/mytxt/" + fileName);
-            try{
-                if(!file.exists()){
-                    file.createNewFile();
-                }
-
-                OutputStream os = new FileOutputStream(file, true);
-                for(int i=1; i<fileProcessor.pageNo; i++){
-                    String pos = String.valueOf(fileProcessor.prevReadLengths[i]) + "\n";
-                    os.write(pos.getBytes());
-                }
-                String length = String.valueOf(fileProcessor.readLength);
-                os.write(length.getBytes());
-            }catch (IOException ie){
-
-            }
+        bookMarker.record(fileProcessor);
         System.exit(0);
     }
 }
