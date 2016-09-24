@@ -18,3 +18,5 @@ Some little bugs are cleaned and the background images are from the internet and
 Dictionary, the initial inspiration for the project
 
 Interface the dicts to modulize it (Chinese.java, Dictionary.java, English.java)
+
+A better architecture may be define a menuSetter class as an inner class of the TextViewer class so that there aren't so many statics which may seem a little wired
