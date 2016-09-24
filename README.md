@@ -23,4 +23,4 @@ A better architecture may be define a menuSetter class as an inner class of the 
 
 Event operation is optimized: flip to next or previous page, long touch to show menu
 
-It is better to rename the BookMarker class PageRecorder. Book marker is only a small function or a little flag of it
+It is better to rename the BookMarker class PageRecorder. Book marker is just a small function or a little flag of it
