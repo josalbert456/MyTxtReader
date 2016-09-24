@@ -113,22 +113,18 @@ public class TextViewer extends Activity implements View.OnTouchListener{
 
         auto_popup = new PopupManager(getLayoutInflater().inflate(R.layout.auto_read, null), this);
         auto_popup.setAnimation(R.style.mypopwindow_anim_style);
+
+        autoReadSetter = new AutoReadSetter();
     }
 
-    public void setBackground(View view){
-        BackgroundSetter.Set(textView, background_popup);
-    }
     public void confirm(View view){
-        //Button bt;
         final RelativeLayout layout = (RelativeLayout)findViewById(R.id.text_viewer_layout);
         switch (view.getId()){
+            // menu for sub-popup
             case R.id.menu_auto_start:
                 auto_popup.showPopup(layout.findViewById(R.id.placeHolder),
                         size.x / 24, size.y / 6);
                 text_menu.dismiss();
-                break;
-            case R.id.background_confirmer:
-                background_popup.dismiss();
                 break;
             case R.id.menu_background:
                 background_popup.showPopup(layout.findViewById(R.id.placeHolder),
@@ -136,22 +132,30 @@ public class TextViewer extends Activity implements View.OnTouchListener{
                         view.getHeight() + view.getPaddingTop());
                 text_menu.dismiss();
                 break;
-
-            case R.id.menu_dict:
-                dict_popup.showPopup(layout.findViewById(R.id.placeHolder),
-                        size.x / 24, size.y / 6);
-                text_menu.dismiss();
-                break;
-            case R.id.dict_search:
-                DictSearcher.search(dict_popup, dictionary);
-                break;
             case R.id.menu_config:
                 config_popup.showPopup(layout.findViewById(R.id.placeHolder),
                         size.x / 24, size.y / 6);
                 text_menu.dismiss();
                 break;
+            case R.id.menu_dict:
+                dict_popup.showPopup(layout.findViewById(R.id.placeHolder),
+                        size.x / 24, size.y / 6);
+                text_menu.dismiss();
+                break;
+            // background pop up
+            case R.id.background_preview:
+                BackgroundSetter.Set(textView, background_popup);
+                break;
+            case R.id.background_confirmer:
+                background_popup.dismiss();
+                break;
+            // configure pop up
             case R.id.config_confirm:
                 ConfigureSetter.confirmConfig(config_popup, fileName);
+                break;
+            // dict pop up
+            case R.id.dict_search:
+                DictSearcher.search(dict_popup, dictionary);
                 break;
             case R.id.en_dict_toggler:
                 DictSearcher.type = "en";
@@ -168,29 +172,30 @@ public class TextViewer extends Activity implements View.OnTouchListener{
             case R.id.dict_exit:
                 dict_popup.dismiss();
                 break;
+            // autoread popup
             case R.id.autoread_confirm:
-                AutoReadSetter.setDelay(auto_popup);
+                autoReadSetter.setDelay(auto_popup);
                 AutoReadingTask art = new AutoReadingTask();
                 art.execute();
                 auto_popup.dismiss();
                 break;
             case R.id.cancel_autoread:
-                AutoReadSetter.autoReadingFlag = false;
+                autoReadSetter.autoReadingFlag = false;
                 auto_popup.dismiss();
                 break;
         }
     }
-
+    AutoReadSetter autoReadSetter;
     private class AutoReadingTask extends AsyncTask<String, Integer, String> {
         @Override
         protected void onPreExecute() {}
         @Override
         protected String doInBackground(String... params) {
-            while(AutoReadSetter.autoReadingFlag){
+            while(autoReadSetter.autoReadingFlag){
                 try{
-                    for(int i=0; i<AutoReadSetter.delayTime; i++){
+                    for(int i=0; i<autoReadSetter.delayTime; i++){
                         Thread.sleep(1000);
-                        if(!AutoReadSetter.autoReadingFlag)break;
+                        if(!autoReadSetter.autoReadingFlag)break;
                     }
                     publishProgress(0);
                 }catch (InterruptedException ie){}
@@ -244,58 +249,26 @@ public class TextViewer extends Activity implements View.OnTouchListener{
 
         }
     }
-    // Better action: move for page up/down, long click to show menu
+    // move for page up/down, long click to show menu
+    float touchDownPos = 0, touchUpPos = 0;
     public boolean onTouch(View view, MotionEvent motionEvent){
         switch (motionEvent.getAction()&MotionEvent.ACTION_MASK){
             case MotionEvent.ACTION_DOWN:
                 time = System.currentTimeMillis();
-                float pos = motionEvent.getX();
-                if(pos>size.x/2){
-                    /*calcDisplayInfo();
-                    try{
-                        // guarantee that the txtBuffer always has 2048 chars
-                        // if we read back just now, we only need to read 2048 forward
-                        if(fileProcessor.backFlag){
-                            txtBuffer = fileProcessor.read(FileProcessor.MAX_READ_COUNTS);
-                            textView.setText(txtBuffer);
-                            fileProcessor.backFlag = false;
-                        }else{
-                            // if not, we read text and stuff the textbuffer
-                            String text = fileProcessor.read(DisplayInfo.DISPLAY_TEXT_END);
-                            txtBuffer = txtBuffer.substring(DisplayInfo.DISPLAY_TEXT_END);
-                            txtBuffer += text;
-                            textView.setText(txtBuffer);
-                        }
-
-                    }catch (IOException ie){
-                        Toast.makeText(this, ie.getMessage(), Toast.LENGTH_SHORT).show();
-                    }*/
-                    readForward();
-                    return true;
-                }else{
-                    /*try{
-                        if(fileProcessor.pageNo<=1){}else{
-                            String text = fileProcessor.readBackward();
-                            int end = txtBuffer.length() - text.length();
-                            txtBuffer = text + txtBuffer.substring(0, end);
-                            textView.setText(txtBuffer);
-                        }
-
-                        return true;
-                    }catch (IOException ie){
-
-                    }*/
-                    readBackward();
-                    return true;
-                }
-
+                touchDownPos = motionEvent.getX();
+                return true;
             case MotionEvent.ACTION_MOVE:
-                    if(System.currentTimeMillis()-time>1000){
-
-                        text_menu.showPopup(findViewById(R.id.placeHolder), size.x/24, size.x/24);
-                       return true;
+                    touchUpPos = motionEvent.getX();
+                    if(touchDownPos - touchUpPos < 50 && touchDownPos - touchUpPos > -50){
+                        if(System.currentTimeMillis()-time>500){
+                            text_menu.showPopup(findViewById(R.id.placeHolder), size.x/24, size.x/24);
+                        }
                     }
-                break;
+                return true;
+            case MotionEvent.ACTION_UP:
+                if(touchDownPos - touchUpPos > 50) readForward();
+                else if(touchDownPos - touchUpPos < -50) readBackward();
+                return true;
         }
         return false;
     }
